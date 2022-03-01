@@ -2,7 +2,7 @@
  * Register Controller
  */
 
- const debug = require('debug')('photoapp:register_controller');
+ const debug = require('debug')('photoapp:user_controller');
  const bcrypt = require('bcrypt');
  const { matchedData, validationResult } = require('express-validator');
  const models = require('../models');
@@ -64,7 +64,7 @@
         res.send({
             status: 'success',
             data: {
-                user,
+                user
             },
         });
 
