@@ -65,16 +65,27 @@
     }
 
     // get only the validated data from the request
+    const userID = req.user.id;
     const validData = matchedData(req);
+    validData.user_id=userID;
+    console.log('This is the authorized user id:'+req.user.id)
+    console.log('This is the validated title: '+validData.title);
+    console.log('This is the validated user_id: '+validData.user_id);
 
     try {
         const photo = await new models.Photo(validData).save();
         debug("Created new photo successfully: %O", photo);
 
+        console.log('This is the mysterious photo:'+photo);
+
         res.send({
             status: 'success',
             data: {
-                photo
+                url: validData.url,
+                title: validData.title,
+                comment: validData.comment,
+                user_id: validData.user_id
+
             },
         });
 
