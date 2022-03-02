@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-//const auth = require('../middlewares/auth');
+const auth = require('../middleware/auth');
 
 /* GET / */
 router.get('/', (req, res, next) => {
@@ -8,6 +8,6 @@ router.get('/', (req, res, next) => {
 });
 
 router.use('/register', require('./user'));
-router.use('/photos', require('./photo'));
+router.use('/photos', auth.basic, require('./photo'));
 
 module.exports = router;
