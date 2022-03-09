@@ -16,7 +16,7 @@
 
   const index = async (req, res) => {
     await req.user.load('photos');
-    const photo_array = req.user.related('photos');
+    req.user.related('photos');
 
     const new_photos = await models.Photo.where('user_id', req.user.id).fetchAll({columns: ['id', 'url', 'title', 'comment']});
 

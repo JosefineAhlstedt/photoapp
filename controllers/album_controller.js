@@ -15,12 +15,14 @@
   */
 
   const index = async (req, res) => {
-    await req.user.load('albums');
+      //Load the relationship between users and albums
+      await req.user.load('albums');
 
-    res.status(200).send({
-        status: 'success',
-        data: req.user.related('albums'),
-    });
+      //Send the users album back
+      res.status(200).send({
+          status: 'success',
+          data: req.user.related('albums'),
+        });
 }
 
  /**
@@ -28,21 +30,19 @@
   *
   * GET /
   */
-    
   
   const single_album = async (req, res) => {
-
-    const chosen_album = await new models.Album({ id: req.params.albumId })
-    .fetch({
-        withRelated:[{
-            'photos':function (qb) {
-                qb.columns('url', 'title', 'comment', 'user_id')
+      //get the chosen album and the relationship with photos
+      const chosen_album = await new models.Album({ id: req.params.albumId }).fetch({
+          withRelated:[{
+              //Get the wanted columns
+              'photos':function (qb) {
+               qb.columns('url', 'title', 'comment', 'user_id')
             }
         }]
-    }).then(function(classified) {
-        res.json(classified.toJSON({ omitPivot: true }));
-      });    
+    });    
     
+    //Send the album with photos back
     res.status(200).send({
         status: 'success',
         data: chosen_album,
@@ -56,27 +56,26 @@
   */
 
  const create = async (req, res) => {
-    // check for any validation errors
+    //check for validation error
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(422).send({ status: 'fail', data: errors.array() });
     }
 
-    // get only the validated data from the request
-    const userID = req.user.id;
+    //get only the validated data from the request
     const validData = matchedData(req);
+    //Make sure the id has a default value
+    const userID = req.user.id;
     validData.user_id=userID;
-    console.log('This is the authorized user id:'+req.user.id)
-    console.log('This is the validated title: '+validData.title);
-    console.log('This is the validated user_id: '+validData.user_id);
 
     try {
-        const album = await new models.Album(validData).save();
-        debug("Created new photo successfully: %O", album);
+        //Save the new album to databse
+        await new models.Album(validData).save();
 
+        //Fetching the newly created album
         const new_album = await models.Album.where('title', req.body.title).fetch({columns: ['user_id', 'title', 'id']});
 
-
+        //Show the new album
         res.send({
             status: 'success',
             data: new_album,
@@ -104,6 +103,7 @@
 		return res.status(422).send({ status: 'fail', data: errors.array() });
 	}
 
+    //Save the validated data
 	const validData = matchedData(req);
     //load the users photo and album relation
     await req.user.load('photos');
@@ -113,9 +113,8 @@
     const users_photos= req.user.related('photos');
     const users_albums= req.user.related('albums');
 
-    //check if the photo belongs to a user
+    //check if the album and photo belongs to a user
     anvandare_photo =users_photos.find(photo => photo.id == validData.photo_id);
-    //check if the album belongs to a user
     anvandare_album =users_albums.find(album => album.id == req.params.albumId );
 
     //Fetching the selected album
@@ -127,7 +126,7 @@
     //Check if the photo I want to add exists in the album
 	const existing_photo = photos.find(photo => photo.id == validData.photo_id);
 
-    //If it does, fail
+    //Does it exist in the album, if so fail
 	if (existing_photo) {
 		return res.send({
 			status: 'fail',
@@ -135,7 +134,7 @@
 		});
 	}
 
-    //If it does, fail
+    //Does the photo belong to user, if not so fail
 	if (!anvandare_photo) {
 		return res.send({
 			status: 'fail',
@@ -143,7 +142,7 @@
 		});
 	}
 
-    //If it does, fail
+    //Does the album belong to user, if not so fail
 	if (!anvandare_album) {
 		return res.send({
 			status: 'fail',
@@ -151,10 +150,9 @@
 		});
 	}
 
-    //If it does not, insert the photo to the album
+    //If the request is clear, attach the photo to the album
 	try {
-		const result = await album.photos().attach(validData.photo_id);
-		debug("Added photo to user successfully: %O", result);
+		await album.photos().attach(validData.photo_id);
 
 		res.send({
 			status: 'success',
@@ -177,9 +175,16 @@
   */
 
  const update_title = async (req, res) => {
+     //load the users albums
+    await req.user.load('albums');
 
     // make sure album exists
     const album = await new models.Album({ id: req.params.albumId }).fetch();
+
+    //all the users photos
+    const users_albums= req.user.related('albums');
+    //check if the photo belongs to a user
+    anvandare_album =users_albums.find(album => album.id == req.params.albumId);
 
     // check for any validation errors
     const errors = validationResult(req);
@@ -189,6 +194,14 @@
 
     // get only the validated data from the request
     const validData = matchedData(req);
+
+    //Does the album belong to user, if not so fail
+	if (!anvandare_album) {
+		return res.send({
+			status: 'fail',
+			data: 'Album doesnt belong to user.',
+		});
+	}
 
 
     try {
