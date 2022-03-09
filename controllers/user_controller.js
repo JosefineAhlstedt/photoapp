@@ -7,25 +7,6 @@
  const { matchedData, validationResult } = require('express-validator');
  const models = require('../models');
 
-
-  /**
-  * Get all resources
-  *
-  * GET /
-  */
- 
-   const index = async (req, res) => {
-    const all_users = await models.User.fetchAll();
-  
-    res.send({
-      status: 'success',
-      data: {
-        users: all_users
-      }
-    });
-  }
-  
-
  /**
   * Register a new user
   *
@@ -43,6 +24,7 @@
     const validData = matchedData(req);
 
     console.log("The validated data:", validData);
+    console.log(req.body.email)
 
     // generate a hash of `validData.password`
     // and overwrite `validData.password` with the generated hash
@@ -61,11 +43,11 @@
         const user = await new models.User(validData).save();
         debug("Created new user successfully: %O", user);
 
+        const new_user = await models.User.where('email', req.body.email).fetch({columns: ['email', 'first_name', 'last_name']});
+
         res.send({
             status: 'success',
-            data: {
-                user
-            },
+            data: new_user,
         });
 
     } catch (error) {
@@ -83,7 +65,6 @@
 
 
   module.exports = {
-    index,
     register
 }
  

@@ -7,10 +7,9 @@
 
  
  /**
-  * Create photo validation rules
+  * Create album validation rules
   */
  const createRules = [
-    //Check if email is an email and if it exists
      body('title').exists().isLength({ min: 3 }),
      body('user_id').optional(),
  ];
@@ -22,11 +21,18 @@
             return Promise.reject(`Photo with ID ${value} does not exist.`);
         }
 
+        console.log('This is the value'+value)
+
         return Promise.resolve();
     }),
 ];
 
+const update_title = [
+    body('title').exists().isLength({ min: 3 }),
+];
+
  module.exports = {
      createRules,
-     add_photo_rules
+     add_photo_rules,
+     update_title
  }

@@ -10,13 +10,23 @@
   * Create photo validation rules
   */
  const createRules = [
-    //Check if email is an email and if it exists
      body('title').exists().isLength({ min: 3 }),
 	 body('url').exists().isURL(),
 	 body('comment').optional().isLength({ min: 3 }),
      body('user_id').optional(),
  ];
+
+  /**
+  * Update photo validation rules
+  */
+   const updateRules = [
+    body('title').optional().isLength({ min: 3 }),
+    body('url').optional().isURL(),
+    body('comment').optional().isLength({ min: 3 }),
+    body('user_id').optional(),
+];
  
  module.exports = {
      createRules,
+     updateRules
  }

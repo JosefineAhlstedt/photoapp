@@ -5,12 +5,13 @@
  module.exports = (bookshelf) => {
 	return bookshelf.model('Photo', {
 		tableName: 'photos',
+		//establishing one to many relationship
         user() {
-			return this.belongsTo('User');   // books.author_id = 3   ->   authors.id = 3 (single author)
+			return this.belongsTo('User'); 
 		},
+		//establishing many to many relationship
 		albums() {
 			return this.belongsToMany('Album', 'photos_albums', 'photo_id', 'album_id');
-			//return this.belongsToMany('Album', 'photo_album', 'album_id', 'photo_id');
 		}
 	});
 };

@@ -14,7 +14,7 @@ const knex = require('knex')({
 
 const bookshelf = require('bookshelf')(knex);
 
-
+//Load the models so we can use them elsewhere
 const models = {};
 models.User = require('./User')(bookshelf);
 models.Photo = require('./Photo')(bookshelf);
