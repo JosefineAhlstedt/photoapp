@@ -41,7 +41,9 @@ const single_photo = async (req, res) => {
 	const related_photos = req.user.related("photos");
 
 	//Look if the chosen photo is a photo the user owns
-	existing_photo = related_photos.find((photo) => photo.id == req.params.id);
+	existing_photo = related_photos.find(
+		(photo) => photo.id == req.params.photoId
+	);
 
 	if (!existing_photo) {
 		return res.status(404).send({
@@ -50,9 +52,16 @@ const single_photo = async (req, res) => {
 		});
 	}
 
+	//get the chosen album and the relationship with photos
+	const chosen_photo = await new models.Photo({
+		id: req.params.photoId,
+	}).fetch({
+		withRelated: ["albums"],
+	});
+
 	res.status(200).send({
 		status: "success",
-		data: existing_photo,
+		data: chosen_photo,
 	});
 };
 

@@ -136,6 +136,14 @@ const add_photo = async (req, res) => {
 		(album) => album.id == req.params.albumId
 	);
 
+	//Does the photo belong to user, if not so fail
+	if (!anvandare_photo || !anvandare_album) {
+		return res.status(404).send({
+			status: "fail",
+			data: "Album doesnt belong to user or doesn't exist.",
+		});
+	}
+
 	//Fetching the selected album
 	const album = await new models.Album({ id: req.params.albumId }).fetch({
 		withRelated: ["photos"],
@@ -154,22 +162,6 @@ const add_photo = async (req, res) => {
 		return res.status(400).send({
 			status: "fail",
 			data: "Photo already exists.",
-		});
-	}
-
-	//Does the photo belong to user, if not so fail
-	if (!anvandare_photo) {
-		return res.status(401).send({
-			status: "fail",
-			data: "Photo doesnt belong to user.",
-		});
-	}
-
-	//Does the album belong to user, if not so fail
-	if (!anvandare_album) {
-		return res.status(401).send({
-			status: "fail",
-			data: "Album doesnt belong to user.",
 		});
 	}
 
@@ -201,15 +193,24 @@ const update_title = async (req, res) => {
 	//load the users albums
 	await req.user.load("albums");
 
-	// make sure album exists
-	const album = await new models.Album({ id: req.params.albumId }).fetch();
-
-	//all the users photos
+	//all the users albums
 	const users_albums = req.user.related("albums");
-	//check if the photo belongs to a user
+
+	//check if the album belongs to a user
 	anvandare_album = users_albums.find(
 		(album) => album.id == req.params.albumId
 	);
+
+	//Does the album belong to user, if not so fail
+	if (!anvandare_album) {
+		return res.status(400).send({
+			status: "fail",
+			data: "Album doesnt belong to user or doesn't exist.",
+		});
+	}
+
+	// make sure album exists
+	const album = await new models.Album({ id: req.params.albumId }).fetch();
 
 	// check for any validation errors
 	const errors = validationResult(req);
@@ -219,14 +220,6 @@ const update_title = async (req, res) => {
 
 	// get only the validated data from the request
 	const validData = matchedData(req);
-
-	//Does the album belong to user, if not so fail
-	if (!anvandare_album) {
-		return res.send({
-			status: "fail",
-			data: "Album doesnt belong to user.",
-		});
-	}
 
 	try {
 		const updatedAlbum = await album.save(validData);
