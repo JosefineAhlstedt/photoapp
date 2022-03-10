@@ -2,7 +2,6 @@
  * Album Controller
  */
 
-const debug = require("debug")("photoapp:album_controller");
 const bcrypt = require("bcrypt");
 const { matchedData, validationResult } = require("express-validator");
 const models = require("../models");
@@ -34,35 +33,28 @@ const index = async (req, res) => {
 const single_album = async (req, res) => {
 	await req.user.load("albums");
 
-	//get the chosen album and the relationship with photos
-	const chosen_album = await new models.Album({
-		id: req.params.albumId,
-	}).fetch({
-		withRelated: [
-			{
-				//Get the wanted columns
-				photos: function (qb) {
-					qb.columns("url", "title", "comment", "user_id");
-				},
-			},
-		],
-	});
-
 	//Get the users albums
 	const related_albums = req.user.related("albums");
 
 	//Look if the chosen album is a album the user owns
 	existing_album = related_albums.find(
-		(album) => album.id == chosen_album.id
+		(album) => album.id == req.params.albumId
 	);
 
 	//Check if the user owns the album
 	if (!existing_album) {
-		return res.send({
+		return res.status(404).send({
 			status: "fail",
-			data: "Album doesnt belong to user.",
+			data: "Album doesnt belong to user or it doesn't exist.",
 		});
 	}
+
+	//get the chosen album and the relationship with photos
+	const chosen_album = await new models.Album({
+		id: req.params.albumId,
+	}).fetch({
+		withRelated: ["photos"],
+	});
 
 	res.status(200).send({
 		status: "success",
@@ -100,7 +92,7 @@ const create = async (req, res) => {
 		).fetch({ columns: ["user_id", "title", "id"] });
 
 		//Show the new album
-		res.send({
+		res.status(200).send({
 			status: "success",
 			data: new_album,
 		});
@@ -159,7 +151,7 @@ const add_photo = async (req, res) => {
 
 	//Does it exist in the album, if so fail
 	if (existing_photo) {
-		return res.send({
+		return res.status(400).send({
 			status: "fail",
 			data: "Photo already exists.",
 		});
@@ -167,7 +159,7 @@ const add_photo = async (req, res) => {
 
 	//Does the photo belong to user, if not so fail
 	if (!anvandare_photo) {
-		return res.send({
+		return res.status(401).send({
 			status: "fail",
 			data: "Photo doesnt belong to user.",
 		});
@@ -175,7 +167,7 @@ const add_photo = async (req, res) => {
 
 	//Does the album belong to user, if not so fail
 	if (!anvandare_album) {
-		return res.send({
+		return res.status(401).send({
 			status: "fail",
 			data: "Album doesnt belong to user.",
 		});
@@ -185,7 +177,7 @@ const add_photo = async (req, res) => {
 	try {
 		await album.photos().attach(validData.photo_id);
 
-		res.send({
+		res.status(200).send({
 			status: "success",
 			data: null,
 		});
@@ -238,9 +230,8 @@ const update_title = async (req, res) => {
 
 	try {
 		const updatedAlbum = await album.save(validData);
-		debug("Updated album successfully: %O", updatedAlbum);
 
-		res.send({
+		res.status(200).send({
 			status: "success",
 			data: {
 				updatedAlbum,

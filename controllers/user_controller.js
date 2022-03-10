@@ -2,7 +2,6 @@
  * Register Controller
  */
 
-const debug = require("debug")("photoapp:user_controller");
 const bcrypt = require("bcrypt");
 const { matchedData, validationResult } = require("express-validator");
 const models = require("../models");
@@ -42,7 +41,7 @@ const register = async (req, res) => {
 			{ columns: ["email", "first_name", "last_name"] }
 		);
 
-		res.send({
+		res.status(200).send({
 			status: "success",
 			data: new_user,
 		});

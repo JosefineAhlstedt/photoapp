@@ -2,7 +2,6 @@
  * Photo Controller
  */
 
-const debug = require("debug")("photoapp:user_controller");
 const bcrypt = require("bcrypt");
 const { matchedData, validationResult } = require("express-validator");
 const models = require("../models");
@@ -38,25 +37,23 @@ const index = async (req, res) => {
 const single_photo = async (req, res) => {
 	await req.user.load("photos");
 
-	//Get the photo with the selected id and the selected columns
-	const chosen_photo = await new models.Photo({
-		id: req.params.photoId,
-	}).fetch({ columns: ["id", "url", "title", "comment"] });
-
 	//Get the users photos
 	const related_photos = req.user.related("photos");
 
 	//Look if the chosen photo is a photo the user owns
-	existing_photo = related_photos.find(
-		(photo) => photo.id == chosen_photo.id
-	);
+	existing_photo = related_photos.find((photo) => photo.id == req.params.id);
 
-	if (existing_photo) {
-		res.status(200).send({
-			status: "success",
-			data: chosen_photo,
+	if (!existing_photo) {
+		return res.status(404).send({
+			status: "fail",
+			data: "Photo doesnt belong to user or it doesn't exist.",
 		});
 	}
+
+	res.status(200).send({
+		status: "success",
+		data: existing_photo,
+	});
 };
 
 /**
@@ -86,7 +83,7 @@ const create = async (req, res) => {
 			columns: ["user_id", "url", "title", "comment", "id"],
 		});
 
-		res.send({
+		res.status(200).send({
 			status: "success",
 			data: new_photo,
 		});
@@ -139,7 +136,7 @@ const update_photo = async (req, res) => {
 		//Save the photo with updated data
 		const updatedPhoto = await photo.save(validData);
 
-		res.send({
+		res.status(200).send({
 			status: "success",
 			data: {
 				updatedPhoto,
